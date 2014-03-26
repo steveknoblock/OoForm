@@ -17,7 +17,7 @@
  * Configuration
  */
 
-require_once 'ooform.config.php';
+require_once 'ooform-config.php';
 
 
 /**
@@ -25,8 +25,8 @@ require_once 'ooform.config.php';
  */
 require_once OOFORM_TEMPLATE_ENGINE_PATH;
 require_once OOFORMBASE . 'ooform.template.'. OOFORM_TEMPLATE_ENGINE .'.class.php';
-require_once OOFORMBASE . 'ooform.lang.php';
-require_once OOFORMBASE . 'ooform.messages.class.php';
+require_once OOFORMBASE . 'ooform-lang.php';
+require_once OOFORMBASE . 'OoFormMessages.php';
 
 
 /**
@@ -113,7 +113,7 @@ function __construct( $field_list )
 	 * with ooForm.
 	 */
 	 
-	$this->templateobj = new ooFormTemplate('templates');
+	$this->templateobj = new OoFormTemplate('templates');
 
 	$this->fields_list = $field_list;
 
