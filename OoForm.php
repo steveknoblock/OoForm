@@ -491,7 +491,7 @@ function action()
  * @param integer sticky mode flag on or off
  */
  
-function render($template_file, $sticky)
+public function render($template_file, $sticky)
 {
 	$this->sticky = $sticky;
 	return $this->templateobj->render($this, array( 'template' => $template_file));
@@ -648,19 +648,18 @@ function tmpl_param( $name, $value )
      *
      * @param array associative list of fields and validation rules 
      */
-//setValidateFields
-	function validatefields( $array ) {
+
+	function setValidateFields( $array ) {
 		$this->validate_list = $array;
-		}
+	}
 		
 	/**
      * specify required fields
      *
      * @param array list of required fields
      */
-//setRequiredFields
-	function requiredfields( $array ) {
-		//print "<p>In requiredfields()";
+
+	function setRequiredFields( $array ) {
 	    $this->required_list = $array;
 	    // with foreach and the field props we really don't need a
 	    // list of required fields do we?
@@ -738,7 +737,7 @@ function tmpl_param( $name, $value )
      * 
      */
 
-	public function geterrorforfield( $field_name ) {
+	public function getErrorForField( $field_name ) {
 		return $this->fields[$field_name]['error'];
 	}
 
@@ -747,11 +746,11 @@ function tmpl_param( $name, $value )
      * Returns an array containing
      * a list of recognized field names.
      */	
-	function getfields( )
+	function getFields( )
     {
 		return $this->fields_list;
 	}
-		
+
     function dbg() {
         print "<h3>Debugging Information</h3>";
         print "<pre>";
