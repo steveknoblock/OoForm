@@ -1,0 +1,109 @@
+OoForm Quick Start
+--------------------------------------------------------------------------------
+
+
+$form = new OoForm(
+
+	'fields' => array(
+		'contact_name',
+		'contact_email'
+		)
+
+);
+
+Specify a list of field names to the constructor. That's all you need to create a form.
+
+The next step is to specify any validation rules or set fields as required fields as necessary. This is optional.
+
+/**
+ * Specify validation rules.
+ */
+ 
+$form->setValidateFields(
+    array(
+        'name'      => '/[A-Za-z]/',
+        'email'     => '_email',
+    ) 
+);
+
+The validation rules are either a regular expression or they are a special keyword that applies a predefined one.
+
+Valid rule keywords always start with an underscore. These are the default rules:
+		# valid MySQL format YYYY-MM-DD date
+		'_mysqldate' => '#\d\d\d\d/\d\d\/\d\d#',
+		# valid name
+		'_name' => '/^[a-zA-Z]+$/',
+		# valid email address
+		'_email' => '/^.+\@([a-z0-9]+(-[a-z0-9]+)?\.)+([a-z]{2,3})$/',
+		# valid zip code
+		'_zip' => '/^\d{5}$|^\d{5}\-\d{4}$/',
+		# valid MM/DD/YYY date
+		'_date' => '#\d\d/\d\d/\d\d\d\d#'
+
+
+/**
+ * Specify required fields.
+ */
+
+$form->setRequiredFields(
+    array(
+        'name',
+        'email'
+    )
+);
+
+An array of field names specifies which fields are required for the form to submit successfully.
+
+
+/**
+ * Specify source for CGI parameters.
+ */
+ 
+$form->params( $_REQUEST );
+
+The default source for CGI parameters is the superglobal $_REQUEST array, which contains parameters and values from the request from both GET and POST mode forms. Calling this is optional.
+
+
+/**
+ * Basic Validation
+ *
+ */
+ 
+if( $form->submitted() )
+{
+    if( $form->validated() )
+    {	
+        print "<p>Form input valid";
+        // Do something with form data
+ 	} else {
+        print "Form input invalid";
+        // Redisplay form for editing or correction
+	}
+	// Display form
+}
+
+
+Proposed Enhancements
+--
+
+Specify all three lists in the constructor.
+
+$form = new OoForm(
+
+	'fields' => array(
+		'contact_name',
+		'contact_email'
+		 ),
+	
+	'validate' => array(
+		'contact_email' => '_email'
+	 ),
+	
+	'required' => array(
+		'contact_email'
+	 )
+
+);
+
+OoForm uses three lists to specify form inputs (represented by arrays). The list of field names, a list of any fields requiring validation and the rules to be applied in validating each field, and the names of any required fields. These can all be specified in the constructor.
+
