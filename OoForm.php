@@ -23,10 +23,11 @@ require_once 'ooform-config.php';
 /**
  * Dependencies
  */
+
 require_once OOFORM_TEMPLATE_ENGINE_PATH;
-require_once OOFORMBASE . 'ooform.template.'. OOFORM_TEMPLATE_ENGINE .'.class.php';
-require_once OOFORMBASE . 'ooform-lang.php';
-require_once OOFORMBASE . 'OoFormMessages.php';
+require_once dirname(__File__) .'/'. 'ooform.template.'. OOFORM_TEMPLATE_ENGINE .'.class.php';
+require_once dirname(__File__) .'/'. 'ooform-lang.php';
+require_once dirname(__File__) .'/'. 'OoFormMessages.php';
 
 
 /**
@@ -38,13 +39,11 @@ class OoForm
 {
 
 	/**
-	 * Private Member Variables (Properties)
+	 * Member Variables / Properties
 	 */
-	
-	private $ooform_base; // Base path for including delegate class files.
-	
+
 	private $fields; // Assoc. array storing meta data and state for each field
-	private $fields_list; // Array listing field names
+	private $fieldsList; // Array listing field names
 
 	/**
 	 * /remark
@@ -52,15 +51,15 @@ class OoForm
 	 * available within the class without explicity passing them.
 	 */
 
-	private $params_list; // parameter array
+	private $paramsList; // parameter array
 
 	/**
 	 * /remark
-	 * ooForm provides a set of predefined validation rules
-	 * for common tasks.
+	 * OoForm provides a set of predefined validation rules
+	 * for common formats.
 	 */
-	 
-	private $rules_list = array(
+ 
+	private $rulesList = array(
 		'_mysqldate' => '#\d\d\d\d/\d\d\/\d\d#',
 		'_name' => '/^[a-zA-Z]+$/',
 		'_email' => '/^.+\@([a-z0-9]+(-[a-z0-9]+)?\.)+([a-z]{2,3})$/',
@@ -73,9 +72,12 @@ class OoForm
 	private $messages_list; // array of messages for each field
 	private $labels_list; // array of messages for each field
 	
+	private $ooform_base; // Base path for including delegate class files.
+
+	
 	/**
 	 * Housekeeping
-	 * /remark Need to organize these.
+	 *
 	 */
 
 	private $error; // error message
@@ -87,254 +89,254 @@ class OoForm
 	private $fail_require;
 	private $usesTemplateEngine; // do we connect to a template engine?
 	private $templateobj; // the template engine
-
-
-/* 
- * Class Member Functions
- *
- */
- 
-
-/**
- * Constructor
- *
- * @param array list of recognized fields
- */
-
-function __construct( $field_list )
-{
+	private $action; // HTML form action URL
 	
+
 	/**
-	 * OoForm delegates template handling to a template engine.
-	 * At this point, it creates an instance of the template
-	 * object for rendering form pages.
-	 * You must pass an array of options meaningful to the
-	 * particular template engine you are using in connection
-	 * with ooForm.
+	 * Class Member Functions
+	 *
 	 */
-	 
-	$this->templateobj = new OoFormTemplate('templates');
-
-	$this->fields_list = $field_list;
-
-	$this->params_list = $_REQUEST;
-
-	if( $debug )
-	{
-		print "<pre>";
-		print "Dumping Constructor\n";
-		print "Field List\n";
-		print_r( $this->fields_list );
-		print "CGI Parameters\n";
-		print_r( $this->params_list );
-		print "</pre>";
-	}
-
-	if( ! empty( $this->fields_list ) ) {
-	 
-	foreach ( $this->fields_list as $field_name ) {
-		$this->fields[$field_name] = array(
-			'name'			=> $field_name,
-			'value'			=> '',
-			'invalid'		=> 0,
-			'is_required'	=> 0,
-			'options'		=> array(),
-			'label'			=> '',
-			'error'			=> '' // Set error to empty by default
-		);
-	}
-
- /**
-  * An empty label field returns the default message: "please
-  * enter a value for the field."
-  */
  
-	if( $debug ) {
-		print "<pre>";
-		print "Initialized Fields<br>";
-		print_r( $this->fields );
-		print "</pre>";
-	}
 
-	 } else {
-	  die("Critical Error: No fields specifed. A form must have at least one field.");
-	 }
+	/**
+	 * Constructor
+	 *
+	 * @param array list of recognized fields
+	 */
+
+	function __construct( $field_list )
+	{
+	
+		/**
+		 * OoForm delegates template handling to a template engine.
+		 * At this point, it creates an instance of the template
+		 * object for rendering form pages.
+		 * You must pass an array of options meaningful to the
+		 * particular template engine you are using in connection
+		 * with ooForm.
+		 */
+	 
+		$this->templateobj = new OoFormTemplate('templates');
+
+		$this->fields_list = $field_list;
+
+		$this->paramsList = $_REQUEST;
+
+		if( $debug )
+		{
+			print "<pre>";
+			print "Dumping Constructor\n";
+			print "Field List\n";
+			print_r( $this->fields_list );
+			print "CGI Parameters\n";
+			print_r( $this->paramsList );
+			print "</pre>";
+		}
+
+		if( ! empty( $this->fields_list ) ) {
+	 
+		foreach ( $this->fields_list as $field_name ) {
+			$this->fields[$field_name] = array(
+				'name'			=> $field_name,
+				'value'			=> '',
+				'invalid'		=> 0,
+				'is_required'	=> 0,
+				'options'		=> array(),
+				'label'			=> '',
+				'error'			=> '' // Set error to empty by default
+			);
+		}
+
+	 /**
+	  * An empty label field returns the default message: "please
+	  * enter a value for the field."
+	  */
+ 
+		if( $debug ) {
+			print "<pre>";
+			print "Initialized Fields<br>";
+			print_r( $this->fields );
+			print "</pre>";
+		}
+
+		 } else {
+		  die("Critical Error: No fields specifed. A form must have at least one field.");
+		 }
 	 
 
-}
+	}
 
 
-/**
- * Submitted Status
- * returns true if form has been submitted
- */
+	/**
+	 * Submitted Status
+	 * returns true if form has been submitted
+	 */
 		 
-function submitted() {
+	function submitted() {
 
-    if( $_REQUEST['submitted'] || $_POST['submit'] || $_GET['submit'] ) {
-    // or return value of submit button, it's so-called caption
-    // return $_POST['submit'] ? $_POST['submit'] : $_GET['submit'];
-        return true;
-    } else {
-        return false;
-    }
-}
-
-
-/**
- * Validated
- * Validate inputs and check if required.
- */
-
-function validated() {
-
-    // clear flags
-    $this->fail_validate = 0;
-    $this->fail_require = 0;
-
-    /**
-     * ooForm delegates messages to a message class.
-     */
-    $msgengine = new OoFormMessages;
-	
-    // debug
-    if( $debug ) {
-        print "Fields to validate: <br />";
-        print_r( $this->fields_list );
-    }
-    
-	 foreach ( $this->fields_list as $field_name ) {
-		
-	 	// debug
-		if( $this->debug == 'verbose' ) {
-		print "<pre>";
-		print "Processing Field\n";
-		print "Field: " . $field_name ."<BR>";
-		print "Value: " . $this->value($field_name) ."<BR><br>";
-		print "Fields<br>";
-		print_r( $this->fields );
-  		print "</pre>";
-		}
-		
-        /**
-         * /remark
-         * This is a trick. The code looks dynamically to either
-         * the form field or the CGI parameter for the value
-         * based on the current state of stickiness. See below.
-         */
-         
-
-		if( $this->params_list[$field_name] == '' ) {
-		
-				if( $this->debug == 'verbose' ) {
-				print "Param: " . $field_name ." is empty<BR>";
-				}
-				
-			// we know the field is empty, check if required
-			if(	in_array($field_name, $this->required_list) ) {
-			
-			
-				// set flag
-				$this->fail_require = 1;
-			
-				// if empty and on required list, field is invalid
-				$this->fields[$field_name][invalid] = 1;
-			
-            
-            /**
-             * /remark
-             * IMPORTANT: If the intention is to render the form again
-             * with fields filled in for correction and error messages
-             * beside the fields, then we must store the required errors,
-             * not just stop at the first one. To prepare for that I will
-             * try setting the invalid flag in the stored fields array
-             * for this field.
-             */
-
-				$this->fields[$field_name][required] = 1;
-			
-				// set the error message for this field
-			
-				// move to messages config
-				//$temp = "<span>Please enter a value for the '$field_name' field.</span>";
-				//$this->fields[$field_name][error] = $temp
-
-				$this->fields[$field_name][error] = $msgengine->message('field_required', $this->fields[$field_name][label]);
-
-				// debug
-				if( $this->debug == '1' ) {
-					print "Parameter " . $field_name ." failed required.<BR>";
-				}
-				
-			}
+		if( $_REQUEST['submitted'] || $_POST['submit'] || $_GET['submit'] ) {
+		// or return value of submit button, it's so-called caption
+		// return $_POST['submit'] ? $_POST['submit'] : $_GET['submit'];
+			return true;
 		} else {
-		
+			return false;
+		}
+	}
+
+
+	/**
+	 * Validated
+	 * Validate inputs and check if required.
+	 */
+
+	function validated() {
+
+		// clear flags
+		$this->fail_validate = 0;
+		$this->fail_require = 0;
+
 		/**
-		 * Validate Fields
+		 * ooForm delegates messages to a message class.
 		 */
-		 
-		 /**
-          * /remark
-          * Note: if a field is empty, we don't check it for validity,
-          * we only check non-empty fields for validity, we check empty
-          * fields to see if they are required, once that check is done,
-          * we don't have to check if valid.
-          */
-		
-		if( $this->debug == 'verbose' ) {
-		print "Validating " . $field_name ."<BR>";
-		print "With Value: " . $this->value($field_name) ."<BR>";
+		$msgengine = new OoFormMessages;
+	
+		// debug
+		if( $debug ) {
+			print "Fields to validate: <br />";
+			print_r( $this->fields_list );
 		}
+	
+		 foreach ( $this->fields_list as $field_name ) {
 		
-		// get regex
-		if( array_key_exists($this->validate_list[$field_name], $this->rules_list) 
-			&& preg_match('/_[a-zA-Z]+$/', $this->validate_list[$field_name])
-			) {
-				if( $this->debug == 'verbose' ) {
-					print "Using rule";
+			// debug
+			if( $this->debug == 'verbose' ) {
+			print "<pre>";
+			print "Processing Field\n";
+			print "Field: " . $field_name ."<BR>";
+			print "Value: " . $this->value($field_name) ."<BR><br>";
+			print "Fields<br>";
+			print_r( $this->fields );
+			print "</pre>";
+			}
+		
+			/**
+			 * /remark
+			 * This is a trick. The code looks dynamically to either
+			 * the form field or the CGI parameter for the value
+			 * based on the current state of stickiness. See below.
+			 */
+		 
+
+			if( $this->paramsList[$field_name] == '' ) {
+		
+					if( $this->debug == 'verbose' ) {
+					print "Param: " . $field_name ." is empty<BR>";
+					}
+				
+				// we know the field is empty, check if required
+				if(	in_array($field_name, $this->required_list) ) {
+			
+			
+					// set flag
+					$this->fail_require = 1;
+			
+					// if empty and on required list, field is invalid
+					$this->fields[$field_name]['invalid'] = 1;
+			
+			
+				/**
+				 * /remark
+				 * IMPORTANT: If the intention is to render the form again
+				 * with fields filled in for correction and error messages
+				 * beside the fields, then we must store the required errors,
+				 * not just stop at the first one. To prepare for that I will
+				 * try setting the invalid flag in the stored fields array
+				 * for this field.
+				 */
+
+					$this->fields[$field_name]['required'] = 1;
+			
+					// set the error message for this field
+			
+					// move to messages config
+					//$temp = "<span>Please enter a value for the '$field_name' field.</span>";
+					//$this->fields[$field_name][error] = $temp
+
+					$this->fields[$field_name]['error'] = $msgengine->message('field_required', $this->fields[$field_name]['label']);
+
+					// debug
+					if( $this->debug == '1' ) {
+						print "Parameter " . $field_name ." failed required.<BR>";
+					}
+				
 				}
-		       $regex = $this->rules_list[$this->validate_list[$field_name]];
-		} else {
-			    if( $this->debug == 'verbose' )
-                {
-			        print "Using user defined rule";
-			    }
-		       $regex = $this->validate_list[$field_name];
-		    }
-			if( $regex != '' && (! preg_match( $regex, $this->value($field_name))) )
-			{
-			// error validation
-			$this->fail_validate = 1;
+			} else {
+		
+			/**
+			 * Validate Fields
+			 */
+		 
+			 /**
+			  * /remark
+			  * Note: if a field is empty, we don't check it for validity,
+			  * we only check non-empty fields for validity, we check empty
+			  * fields to see if they are required, once that check is done,
+			  * we don't have to check if valid.
+			  */
+		
+			if( $this->debug == 'verbose' ) {
+			print "Validating " . $field_name ."<BR>";
+			print "With Value: " . $this->value($field_name) ."<BR>";
+			}
+		
+			// get regex
+			if( array_key_exists($this->validate_list[$field_name], $this->rulesList) 
+				&& preg_match('/_[a-zA-Z]+$/', $this->validate_list[$field_name])
+				) {
+					if( $this->debug == 'verbose' ) {
+						print "Using rule";
+					}
+				   $regex = $this->rulesList[$this->validate_list[$field_name]];
+			} else {
+					if( $this->debug == 'verbose' )
+					{
+						print "Using user defined rule";
+					}
+				   $regex = $this->validate_list[$field_name];
+				}
+				if( $regex != '' && (! preg_match( $regex, $this->value($field_name))) )
+				{
+				// error validation
+				$this->fail_validate = 1;
 						
-			// experimental code to set invalid flag for this field
-			$this->fields[$field_name][invalid] = 1;
-$this->fields[$field_name][error] = $msgengine->message('field_invalid', $this->fields[$field_name][label]);
+				// experimental code to set invalid flag for this field
+				$this->fields[$field_name]['invalid'] = 1;
+	$this->fields[$field_name]['error'] = $msgengine->message('field_invalid', $this->fields[$field_name]['label']);
 
+				}
 			}
+	
+		} // end foreach
+	
+		// debug
+		if( $this->debug == 'verbose' ) {
+			//print "Fail Validate: ". $this->fail_validate ."<br>";;
+			//print "Fail Require: ". $this->fail_require ."<BR><br>";;
 		}
 	
-	} // end foreach
-	
-	// debug
-    if( $this->debug == 'verbose' ) {
-    	//print "Fail Validate: ". $this->fail_validate ."<br>";;
-	    //print "Fail Require: ". $this->fail_require ."<BR><br>";;
-	}
-    
-	if( $this->fail_validate
-	|| $this->fail_require ) {
-		return false;
-	} else {
-		return true;
-	}
+		if( $this->fail_validate
+		|| $this->fail_require ) {
+			return false;
+		} else {
+			return true;
+		}
 }
 
 
-		/**
-		 * Trusted Source
-		 * Returns true if the GET/POST information comes from a trusted source
-		 */
-
+	/**
+	 * Trusted Source
+	 * Returns true if the GET/POST information comes from a trusted source
+	 */
 
 public function trusted() {
 
@@ -353,273 +355,274 @@ public function trusted() {
 }
 
 
-/**
- * Helper function for value() from php manual entry by mike-php at emerge2 dot com
- */
- 
-private function stripslashes_array( $given )
-{
-    return is_array( $given ) ? array_map( 'stripslashes', $given ) : stripslashes( $given );
-}
-
- /**
-  * The purpose of this function is to return the dynamic
-  * auto sticky value of a field. It is used internally to
-  * encapsulate returning of field values. Used by field().
-  * @param string name of field
-  */
-
-private function value( $field_name )
-{
-
-        /**
-         * /remark
-         * This is a trick. The code looks dynamically to either
-         * the form field or the CGI parameter for the value
-         * based on the current state of stickiness. When sticky
-         * it returns the CGI parameter, when not it returns
-         * current value of form field (from the model).
-         * This can be clearly seen in the code:
-         *
-         * $this->params_list[$field_name];
-         * returns CGI value from our local copy
-         *
-         * $this->fields[$field_name]['value'];
-         * returns field value from our model.
-         */
-
-	if( $this->sticky ) {
-		// return cgi param value, cgi beats default
-		
-		/**
-		 * Note: params_list is a copy of $_POST or $_GET or
-		   or $_REQUEST array.
-		   
-		   */
-
-		// handle magic quotes nightmare!  
-		if ( get_magic_quotes_gpc() ) {
-		/**
-		 * \remark params_list[key] holds the value for a particular CGI parameter. It does not need to specify a second key to get the value. Just to clear up a point of possible confusion, as to why it does not say params_list[key]['value'] like accessing a field.
-		 */
-			$value = $this->params_list[$field_name];
-			// this does not handle multiple select arrays
-			$value = $this->stripslashes_array( $value );
-		} else {
-			$value = $this->params_list[$field_name];
-		}
-	
-	return $value;
-		
-	} else {
-		return $this->fields[$field_name]['value'];
-	}
-}
-
-
-/**
- * field 
- * get the value of a form field
- */
-
-public function field()
-{
-/**
- * /remark
- * Note: This function depends on special PHP functions, which
- * cannot be used outside of a function definition. The behavior
- * of the functions is somewhat inconsistent with the behavior
- * of normal functions.
- */
-     
-	$numargs = func_num_args(); // function cannot be used directly as a function parameter
-	   
-	if ($numargs > 1) {
-
-		/**
-		 * Field Assign
-		 *
-		 */
-			   
-		$arg_list = func_get_args();
-		   
-		$field_name = $arg_list[0];
-		$field_value = $arg_list[1];
-		
-		// debug	
-		//print "Assigning value " 	. $field_value ." to ". $field_name ." field<br>";
-	
-		$this->fields[$field_name]['value'] = $field_value;
-		   
-	} else {
-	
 	/**
-	 * Field Retrieve
-	 *
+	 * Helper function for value() from php manual entry by mike-php at emerge2 dot com
 	 */
-			
-	$arg_list = func_get_args();
+ 
+	private function stripslashes_array( $given )
+	{
+		return is_array( $given ) ? array_map( 'stripslashes', $given ) : stripslashes( $given );
+	}
 
-	$field_name = $arg_list[0];
+	 /**
+	  * The purpose of this function is to return the dynamic
+	  * auto sticky value of a field. It is used internally to
+	  * encapsulate returning of field values. Used by field().
+	  * @param string name of field
+	  */
+
+	private function value( $field_name )
+	{
+
+			/**
+			 * /remark
+			 * This is a trick. The code looks dynamically to either
+			 * the form field or the CGI parameter for the value
+			 * based on the current state of stickiness. When sticky
+			 * it returns the CGI parameter, when not it returns
+			 * current value of form field (from the model).
+			 * This can be clearly seen in the code:
+			 *
+			 * $this->paramsList[$field_name];
+			 * returns CGI value from our local copy
+			 *
+			 * $this->fields[$field_name]['value'];
+			 * returns field value from our model.
+			 */
+
+		if( $this->sticky ) {
+			// return cgi param value, cgi beats default
+		
+			/**
+			 * Note: params_list is a copy of $_POST or $_GET or
+			   or $_REQUEST array.
 		   
+			   */
+
+			// handle magic quotes nightmare!  
+			if ( get_magic_quotes_gpc() ) {
+			/**
+			 * \remark params_list[key] holds the value for a particular CGI parameter. It does not need to specify a second key to get the value. Just to clear up a point of possible confusion, as to why it does not say params_list[key]['value'] like accessing a field.
+			 */
+				$value = $this->paramsList[$field_name];
+				// this does not handle multiple select arrays
+				$value = $this->stripslashes_array( $value );
+			} else {
+				$value = $this->paramsList[$field_name];
+			}
+	
+		return $value;
+		
+		} else {
+			return $this->fields[$field_name]['value'];
+		}
+	}
+
+
 	/**
-     * I suppose this would work too
-     * $field_name = func_get_arg(0);
+	 * field 
+	 * get the value of a form field
+	 */
+
+	public function getFormField()
+	{
+	/**
+	 * /remark
+	 * Note: This function depends on special PHP functions, which
+	 * cannot be used outside of a function definition. The behavior
+	 * of the functions is somewhat inconsistent with the behavior
+	 * of normal functions.
 	 */
 	 
-	return $this->value( $field_name );
+		$numargs = func_num_args(); // function cannot be used directly as a function parameter
+	   
+		if ($numargs > 1) {
+
+			/**
+			 * Field Assign
+			 *
+			 */
+			   
+			$arg_list = func_get_args();
+		   
+			$field_name = $arg_list[0];
+			$field_value = $arg_list[1];
+		
+			// debug	
+			//print "Assigning value " 	. $field_value ." to ". $field_name ." field<br>";
+	
+			$this->fields[$field_name]['value'] = $field_value;
+		   
+		} else {
+	
+		/**
+		 * Field Retrieve
+		 *
+		 */
+			
+		$arg_list = func_get_args();
+
+		$field_name = $arg_list[0];
+		   
+		/**
+		 * I suppose this would work too
+		 * $field_name = func_get_arg(0);
+		 */
+	 
+		return $this->value( $field_name );
+		}
 	}
-} // end function
 
 
-/**
- * action
- *
- */
+	/**
+	 * getAction
+	 *
+	 */
 
-function action()
-{
-    $action = (! empty( $this->action ) ) ? ($this->action) : ($_SERVER['PHP_SELF']); 
-	return $action;
-}
+	function getFormAction()
+	{
+		$action = (! empty( $this->action ) ) ? ($this->action) : ($_SERVER['PHP_SELF']); 
+		return $action;
+	}
 
 
-/**
- * render
- *
- * @param string name of template file
- * @param integer sticky mode flag on or off
- */
+	/**
+	 * render
+	 *
+	 * @param string name of template file
+	 * @param integer sticky mode flag on or off
+	 */
  
-public function render($template_file, $sticky)
-{
-	$this->sticky = $sticky;
-	return $this->templateobj->render($this, array( 'template' => $template_file));
-}
+	public function render($template_file, $sticky)
+	{
+		$this->sticky = $sticky;
+		return $this->templateobj->render($this, array( 'template' => $template_file));
+	}
 
 
-/**
- * label
- *
- * @param string name of field
- * @param string human readable label for field
- */
+	/**
+	 * label
+	 *
+	 * @param string name of field
+	 * @param string human readable label for field
+	 */
 
-// this is not an acessor function because fields are not yet objects
-// but it acts like an accessor
-public function label( $field_name, $label )
-{
+	// this is not an acessor function because fields are not yet objects
+	// but it acts like an accessor
+	/* deprecated
+	public function label( $field_name, $label )
+	{
 
-	$this->fields[$field_name][label] = $label;
-}
+		$this->fields[$field_name][label] = $label;
+	}
+	*/
 
-
-/**
- * debug
- *
- * @param string text
- * @param variant a valid PHP value
- */
+	/**
+	 * debug
+	 *
+	 * @param string text
+	 * @param variant a valid PHP value
+	 */
  
-function debug( $text, $value )
-{
-    print "<p>(Debug) $text: $value</p>";
-    if( is_array( $value ) )
-    {
-        print_r( $value );
-    }
-}
+	function debug( $text, $value )
+	{
+		print "<p>(Debug) $text: $value</p>";
+		if( is_array( $value ) )
+		{
+			print_r( $value );
+		}
+	}
 
 
 
-/**
- * options
- *
- * @param string name of field
- * @param array options list
- */
+	/**
+	 * options
+	 *
+	 * @param string name of field
+	 * @param array options list
+	 */
  
-// IMPORTANT Set options array.
-/**
- * options
- * Expects associative array of option values and labels
- array(
-	'va' => 'Virginia',
-	... etc. ...
-	)
- */
-public function options( $field_name, $options )
-{
+	// IMPORTANT Set options array.
+	/**
+	 * options
+	 * Expects associative array of option values and labels
+	 array(
+		'va' => 'Virginia',
+		... etc. ...
+		)
+	 */
+	public function options( $field_name, $options )
+	{
 
-	$this->fields[$field_name]['options'] = $options;
-}
+		$this->fields[$field_name]['options'] = $options;
+	}
 
-/**
- * setfield
- * this is function to set field properties
- * one stop shopping style
- * @param string name of field
- * @param array option list
- */
+	/**
+	 * setfield
+	 * this is function to set field properties
+	 * one stop shopping style
+	 * @param string name of field
+	 * @param array option list
+	 */
 
-public function setfield( $field_name, $options )
-{
-
-if( $debug )
-{
-    print "<pre>";
-    print "Options:\n-----------------------------\n";
-    print_r( $options );
-    print $options['name'];
-    print $options['value'];
-    print "\n--------------------------------------\n";
-    print "</pre>";
-}
-
-/**
- * Options (to this function, not an HTML menu option) is an associative array, which gives great flexibility in setting any number of options you want. E.g.
- 
-	array(
-		'name' => 'email',
-		'value'	=> 'foo@bar.com',
-		'label' => 'Email Address',
-		'required' => 1
-		);
- */
- 
-	$this->fields[$field_name]['name'] = ( $options['name'] ) ? $options['name'] : '';
-
-	$this->fields[$field_name]['value'] = ( $options['value'] ) ? $options['value'] : '';
+	public function setfield( $field_name, $options )
+	{
 
 	if( $debug )
 	{
 		print "<pre>";
-		print "Value (option): " . $options['value'] . "\n";
-		print "Value: " . $this->fields[$field_name]['value'] . "\n";
+		print "Options:\n-----------------------------\n";
+		print_r( $options );
+		print $options['name'];
+		print $options['value'];
+		print "\n--------------------------------------\n";
 		print "</pre>";
 	}
 
-	$this->fields[$field_name]['label'] = ( $options['label'] ) ? $options['label'] : '';
-
-	$this->fields[$field_name]['required'] = ( $options['required'] ) ? $options['required'] : '';
-
-}
-
-
-
-/**
- * tmpl_param
- * Communicates value directly to template placeholder
- * independent of form hander.
- *
- * @param string name of field
- * @param variant a valid PHP value
- */
+	/**
+	 * Options (to this function, not an HTML menu option) is an associative array, which gives great flexibility in setting any number of options you want. E.g.
  
-function tmpl_param( $name, $value )
-{
-    $this->templateobj->assignp($this, array( 'name' => $name, 'value' => $value));
-}
+		array(
+			'name' => 'email',
+			'value'	=> 'foo@bar.com',
+			'label' => 'Email Address',
+			'required' => 1
+			);
+	 */
+ 
+		$this->fields[$field_name]['name'] = ( $options['name'] ) ? $options['name'] : '';
+
+		$this->fields[$field_name]['value'] = ( $options['value'] ) ? $options['value'] : '';
+
+		if( $debug )
+		{
+			print "<pre>";
+			print "Value (option): " . $options['value'] . "\n";
+			print "Value: " . $this->fields[$field_name]['value'] . "\n";
+			print "</pre>";
+		}
+
+		$this->fields[$field_name]['label'] = ( $options['label'] ) ? $options['label'] : '';
+
+		$this->fields[$field_name]['required'] = ( $options['required'] ) ? $options['required'] : '';
+
+	}
+
+
+
+	/**
+	 * tmpl_param
+	 * Communicates value directly to template placeholder
+	 * independent of form hander.
+	 *
+	 * @param string name of field
+	 * @param variant a valid PHP value
+	 */
+ 
+	public function tmpl_param( $name, $value )
+	{
+		$this->templateobj->assignp($this, array( 'name' => $name, 'value' => $value));
+	}
 
 
 /******************************************************************
@@ -629,7 +632,7 @@ function tmpl_param( $name, $value )
 // setParams
 	function params( $array )
     {
-		$this->params_list = $array;
+		$this->paramsList = $array;
 	}
 
 	/**
@@ -649,7 +652,7 @@ function tmpl_param( $name, $value )
      * @param array associative list of fields and validation rules 
      */
 
-	function setValidateFields( $array ) {
+	public function setValidateFields( $array ) {
 		$this->validate_list = $array;
 	}
 		
@@ -659,12 +662,12 @@ function tmpl_param( $name, $value )
      * @param array list of required fields
      */
 
-	function setRequiredFields( $array ) {
+	public function setRequiredFields( $array ) {
 	    $this->required_list = $array;
 	    // with foreach and the field props we really don't need a
 	    // list of required fields do we?
 	    foreach ( $array as $field_name ) {
-            $this->fields[$field_name][is_required] = 1;
+            $this->fields[$field_name]['is_required'] = 1;
 	    }
 	}
 
@@ -674,13 +677,15 @@ function tmpl_param( $name, $value )
      *
      * @param array associative array of fields and messages
      */
-	//setMessages
-	function messages( $array )
+
+	public function setMessages( $array )
     {
 		$this->messages_list = $array;
 	}
+	
+	
 	//setAcceptHost
-	function acceptHost( $domain )
+	public function acceptHost( $domain )
     {
 		$this->acceptHost = $domain;
 	}
@@ -695,16 +700,18 @@ function tmpl_param( $name, $value )
      * 
      */	
      
-	public function setLabel( $field_name, $label_name ) {
+	public function setFieldLabel( $field_name, $label_name ) {
 		$this->fields[$field_name]['label'] = $label_name;
 	}	 
- 	 
+
+
+
  	/**
      * Returns the label for a form field.
      * 
      */	
      
-	public function getLabel( $field_name ) {
+	public function getFieldLabel( $field_name ) {
 		$this->fields[$field_name]['label'];
 	}
 
@@ -713,7 +720,7 @@ function tmpl_param( $name, $value )
      * Expected to be 1/0
      */	
 
-	public function setRequiredStatus( $field_name, $status ) {
+	public function setFieldRequiredStatus( $field_name, $status ) {
 		$this->fields[$field_name]['required'] = $status;
 	}
 	
@@ -722,7 +729,7 @@ function tmpl_param( $name, $value )
      * Expected to be 1/0
      */	
 
-	public function getRequiredStatus( $field_name ) {
+	public function getFieldRequiredStatus( $field_name ) {
 		$this->fields[$field_name]['required'];
 	}
 
@@ -746,11 +753,18 @@ function tmpl_param( $name, $value )
      * Returns an array containing
      * a list of recognized field names.
      */	
+
 	function getFields( )
     {
 		return $this->fields_list;
 	}
 
+
+	/**
+	 * Display debugging information.
+	 *
+	 */
+	 
     function dbg() {
         print "<h3>Debugging Information</h3>";
         print "<pre>";
@@ -762,7 +776,7 @@ function tmpl_param( $name, $value )
         print "Fields<br>";
         print_r( $this->fields_list );
         print "Parameters<br>";
-        print_r( $this->params_list );
+        print_r( $this->paramsList );
         print "Validate<br>";
         print_r( $this->validate_list );
         print "Required<br>";
@@ -773,4 +787,4 @@ function tmpl_param( $name, $value )
         print "</pre>";
     }
 
-} // end OoForm
+}
