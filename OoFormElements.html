@@ -1,0 +1,40 @@
+<?php
+
+class OoFormElements {
+
+	// elements helpers
+	// generate HTML for form inputs
+
+	public function form() {
+
+
+	}
+	
+	// <input name=email value=foo type=text>
+	public function input($name, $value) {
+		$o ='';
+		$o .= '<input';
+		$o .= ' type="text"';
+		$o .= ' name="'. $name .'"';
+		$o .= ' value="'. $value .'"';
+		$o .= '>';
+		return $o;
+	}
+
+	public function textarea() {
+
+
+	}
+
+
+	public function select() {
+
+
+	}
+
+	//<input type=radio name=pizzatopping value=pepperoni selected>
+	public function radio() {
+
+
+	}
+}

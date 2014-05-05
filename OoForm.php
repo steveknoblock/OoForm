@@ -27,6 +27,7 @@ require_once 'ooform-config.php';
 require_once OOFORM_TEMPLATE_ENGINE_PATH;
 require_once dirname(__File__) .'/'. 'ooform.template.'. OOFORM_TEMPLATE_ENGINE .'.class.php';
 require_once dirname(__File__) .'/'. 'ooform-lang.php';
+require_once dirname(__File__) .'/'. 'OoFormField.php';
 require_once dirname(__File__) .'/'. 'OoFormMessages.php';
 
 
@@ -42,7 +43,7 @@ class OoForm
 	 * Member Variables / Properties
 	 */
 
-	private $fields; // Assoc. array storing meta data and state for each field
+	private $fields; // Assoc. array of Field objects storing meta data and state for each field
 	private $fieldsList; // Array listing field names
 
 	/**
@@ -88,7 +89,7 @@ class OoForm
 	private $fail_validate;
 	private $fail_require;
 	private $usesTemplateEngine; // do we connect to a template engine?
-	private $templateobj; // the template engine
+	private $templateEngine; // the template engine
 	private $action; // HTML form action URL
 	
 
@@ -100,14 +101,44 @@ class OoForm
 
 	/**
 	 * Constructor
-	 *
+	 * OoForm( params )
 	 * @param array list of recognized fields
 	 */
+	 
+	 /* Expects an anonymous array of fields and values for each field.
+	  $field_init = array(
+			array(
+			'name' => 'name',
+			'label' => 'Name: ',
+			'rule' => 'REGEX HERE',
+			'required' => '0'
+			),
+			array(
+			'name' => 'email_address',
+			'label' => 'Email: ',
+			'rule' => 'REGEX HERE',
+			'required' => '1'
+			)
+		);
+		
+		Creates array of objects using name as key.
+	*/
 
-	function __construct( $field_list )
+	function __construct( $fields_init )
 	{
 	
+		foreach( $field_init as $field ) {
+			$this->fields[$field['name']] = new OoFormField(
+				array(
+				'name' => $field['name'],
+				'label' => $field['label'],
+				)
+				$this->fieldsList[] = $field['name'];
+			);
+		}
+	
 		/**
+		 * This code is used when
 		 * OoForm delegates template handling to a template engine.
 		 * At this point, it creates an instance of the template
 		 * object for rendering form pages.
@@ -116,9 +147,10 @@ class OoForm
 		 * with ooForm.
 		 */
 	 
-		$this->templateobj = new OoFormTemplate('templates');
+		//$this->templateEngine = new OoFormTemplate('templates');
 
-		$this->fields_list = $field_list;
+		// reference list of Field objects now
+		//$this->fields_list = $field_list;
 
 		$this->paramsList = $_REQUEST;
 
@@ -126,13 +158,15 @@ class OoForm
 		{
 			print "<pre>";
 			print "Dumping Constructor\n";
-			print "Field List\n";
-			print_r( $this->fields_list );
+			//print "Field List\n";
+			//print_r( $this->fields_list );
 			print "CGI Parameters\n";
 			print_r( $this->paramsList );
 			print "</pre>";
 		}
 
+/*
+deprecated
 		if( ! empty( $this->fields_list ) ) {
 	 
 		foreach ( $this->fields_list as $field_name ) {
@@ -146,12 +180,12 @@ class OoForm
 				'error'			=> '' // Set error to empty by default
 			);
 		}
-
+*/
 	 /**
 	  * An empty label field returns the default message: "please
 	  * enter a value for the field."
 	  */
- 
+ /*
 		if( $debug ) {
 			print "<pre>";
 			print "Initialized Fields<br>";
@@ -163,7 +197,7 @@ class OoForm
 		  die("Critical Error: No fields specifed. A form must have at least one field.");
 		 }
 	 
-
+*/
 	}
 
 
@@ -496,44 +530,8 @@ public function trusted() {
 	public function render($template_file, $sticky)
 	{
 		$this->sticky = $sticky;
-		return $this->templateobj->render($this, array( 'template' => $template_file));
+		return $this->templateEngine->render($this, array( 'template' => $template_file));
 	}
-
-
-	/**
-	 * label
-	 *
-	 * @param string name of field
-	 * @param string human readable label for field
-	 */
-
-	// this is not an acessor function because fields are not yet objects
-	// but it acts like an accessor
-	/* deprecated
-	public function label( $field_name, $label )
-	{
-
-		$this->fields[$field_name][label] = $label;
-	}
-	*/
-
-	/**
-	 * debug
-	 *
-	 * @param string text
-	 * @param variant a valid PHP value
-	 */
- 
-	function debug( $text, $value )
-	{
-		print "<p>(Debug) $text: $value</p>";
-		if( is_array( $value ) )
-		{
-			print_r( $value );
-		}
-	}
-
-
 
 	/**
 	 * options
@@ -621,7 +619,7 @@ public function trusted() {
  
 	public function tmpl_param( $name, $value )
 	{
-		$this->templateobj->assignp($this, array( 'name' => $name, 'value' => $value));
+		$this->templateEngine->assignp($this, array( 'name' => $name, 'value' => $value));
 	}
 
 
@@ -705,7 +703,6 @@ public function trusted() {
 	}	 
 
 
-
  	/**
      * Returns the label for a form field.
      * 
@@ -760,11 +757,33 @@ public function trusted() {
 	}
 
 
+/**
+ * Helpers
+ *
+ */
+ 
+
+	/**
+	 * debug
+	 *
+	 * @param string text
+	 * @param variant a valid PHP value
+	 */
+ 
+	function debug( $text, $value )
+	{
+		print "<p>(Debug) $text: $value</p>";
+		if( is_array( $value ) )
+		{
+			print_r( $value );
+		}
+	}
+
 	/**
 	 * Display debugging information.
 	 *
-	 */
-	 
+	 */	
+	
     function dbg() {
         print "<h3>Debugging Information</h3>";
         print "<pre>";

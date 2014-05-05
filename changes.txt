@@ -1,0 +1,11 @@
+Changes
+--
+
+Changed getRequiredStatus() to getFieldRequiredStatus()
+Changed setRequiredStatus() to setFieldRequiredStatus()
+Changed getLabel() and setLabel() to getFieldLabel() and setFieldLabel()
+Corrected a few scattered bare array literals. [word] to ['word'] Oops.
+Changed action() to getFormAction()
+Changed $rules_list to $rulesList and $this->rules_list to $this->rulesList as well as other property names and references.
+
+

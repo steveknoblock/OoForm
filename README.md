@@ -1,4 +1,5 @@
 OoForm
 ======
 
-OoForm is an OO form handler based on a port of Perl CPAN CGI:FormBuilder
+OoForm is a form handler inspired by the Perl CPAN module CGI:FormBuilder.
+

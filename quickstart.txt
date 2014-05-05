@@ -83,27 +83,5 @@ if( $form->submitted() )
 }
 
 
-Proposed Enhancements
---
 
-Specify all three lists in the constructor.
-
-$form = new OoForm(
-
-	'fields' => array(
-		'contact_name',
-		'contact_email'
-		 ),
-	
-	'validate' => array(
-		'contact_email' => '_email'
-	 ),
-	
-	'required' => array(
-		'contact_email'
-	 )
-
-);
-
-OoForm uses three lists to specify form inputs (represented by arrays). The list of field names, a list of any fields requiring validation and the rules to be applied in validating each field, and the names of any required fields. These can all be specified in the constructor.
 
