@@ -83,7 +83,7 @@ class OoForm
 
 	private $error; // error message
 	private $debug = ''; // 'verbose'
-	private $sticky = 1;
+	public $sticky = 1;
 	private $acceptHost;
 	//var $submitted; // future use
 	private $fail_validate;
@@ -91,7 +91,7 @@ class OoForm
 	private $usesTemplateEngine; // do we connect to a template engine?
 	private $templateEngine; // the template engine
 	private $action; // HTML form action URL
-	
+	private $fieldErrors;
 
 	/**
 	 * Class Member Functions
@@ -124,17 +124,21 @@ class OoForm
 		Creates array of objects using name as key.
 	*/
 
-	function __construct( $fields_init )
-	{
+	function __construct( $fields_init ) {
 	
-		foreach( $field_init as $field ) {
+			print_r( $fields_init );
+		
+		foreach( $fields_init AS $field ) {
 			$this->fields[$field['name']] = new OoFormField(
 				array(
 				'name' => $field['name'],
+				'value' => $field['value'],
 				'label' => $field['label'],
+				'rule' => $field['rule'],
+				'required' => $field['required']
 				)
-				$this->fieldsList[] = $field['name'];
 			);
+			//$this->fieldsList[] = $field['name'];
 		}
 	
 		/**
@@ -154,50 +158,17 @@ class OoForm
 
 		$this->paramsList = $_REQUEST;
 
-		if( $debug )
+		if( 1 )
 		{
-			print "<pre>";
-			print "Dumping Constructor\n";
-			//print "Field List\n";
-			//print_r( $this->fields_list );
-			print "CGI Parameters\n";
+			print "<pre style='background: gray'>";
+			print "OoForm: Dumping Constructor\n";
+			print "Fields\n";
+			print_r( $this->fields );
+			print "Current HTTP Request Parameters\n";
 			print_r( $this->paramsList );
 			print "</pre>";
 		}
 
-/*
-deprecated
-		if( ! empty( $this->fields_list ) ) {
-	 
-		foreach ( $this->fields_list as $field_name ) {
-			$this->fields[$field_name] = array(
-				'name'			=> $field_name,
-				'value'			=> '',
-				'invalid'		=> 0,
-				'is_required'	=> 0,
-				'options'		=> array(),
-				'label'			=> '',
-				'error'			=> '' // Set error to empty by default
-			);
-		}
-*/
-	 /**
-	  * An empty label field returns the default message: "please
-	  * enter a value for the field."
-	  */
- /*
-		if( $debug ) {
-			print "<pre>";
-			print "Initialized Fields<br>";
-			print_r( $this->fields );
-			print "</pre>";
-		}
-
-		 } else {
-		  die("Critical Error: No fields specifed. A form must have at least one field.");
-		 }
-	 
-*/
 	}
 
 
@@ -206,7 +177,7 @@ deprecated
 	 * returns true if form has been submitted
 	 */
 		 
-	function submitted() {
+	public function submitted() {
 
 		if( $_REQUEST['submitted'] || $_POST['submit'] || $_GET['submit'] ) {
 		// or return value of submit button, it's so-called caption
@@ -220,173 +191,32 @@ deprecated
 
 	/**
 	 * Validated
-	 * Validate inputs and check if required.
+	 * Ask all fields if they are valid.
 	 */
 
-	function validated() {
+	public function validated() {
 
-		// clear flags
-		$this->fail_validate = 0;
-		$this->fail_require = 0;
-
-		/**
-		 * ooForm delegates messages to a message class.
-		 */
-		$msgengine = new OoFormMessages;
-	
-		// debug
-		if( $debug ) {
-			print "Fields to validate: <br />";
-			print_r( $this->fields_list );
+		foreach( $this->fields AS $field ) {
+			print '<pre>';
+			print_r( $field );
+			print '</pre>';
+		$status = $field->validateField();
+		if( !$status ) {
+				$this->fieldErrors++;
 		}
-	
-		 foreach ( $this->fields_list as $field_name ) {
-		
-			// debug
-			if( $this->debug == 'verbose' ) {
-			print "<pre>";
-			print "Processing Field\n";
-			print "Field: " . $field_name ."<BR>";
-			print "Value: " . $this->value($field_name) ."<BR><br>";
-			print "Fields<br>";
-			print_r( $this->fields );
-			print "</pre>";
-			}
-		
-			/**
-			 * /remark
-			 * This is a trick. The code looks dynamically to either
-			 * the form field or the CGI parameter for the value
-			 * based on the current state of stickiness. See below.
-			 */
-		 
+			
+			
+			
 
-			if( $this->paramsList[$field_name] == '' ) {
-		
-					if( $this->debug == 'verbose' ) {
-					print "Param: " . $field_name ." is empty<BR>";
-					}
-				
-				// we know the field is empty, check if required
-				if(	in_array($field_name, $this->required_list) ) {
-			
-			
-					// set flag
-					$this->fail_require = 1;
-			
-					// if empty and on required list, field is invalid
-					$this->fields[$field_name]['invalid'] = 1;
-			
-			
-				/**
-				 * /remark
-				 * IMPORTANT: If the intention is to render the form again
-				 * with fields filled in for correction and error messages
-				 * beside the fields, then we must store the required errors,
-				 * not just stop at the first one. To prepare for that I will
-				 * try setting the invalid flag in the stored fields array
-				 * for this field.
-				 */
+		} // end fe
 
-					$this->fields[$field_name]['required'] = 1;
-			
-					// set the error message for this field
-			
-					// move to messages config
-					//$temp = "<span>Please enter a value for the '$field_name' field.</span>";
-					//$this->fields[$field_name][error] = $temp
-
-					$this->fields[$field_name]['error'] = $msgengine->message('field_required', $this->fields[$field_name]['label']);
-
-					// debug
-					if( $this->debug == '1' ) {
-						print "Parameter " . $field_name ." failed required.<BR>";
-					}
-				
-				}
+		if($this->fieldErrors) {
+				return 0;
 			} else {
-		
-			/**
-			 * Validate Fields
-			 */
-		 
-			 /**
-			  * /remark
-			  * Note: if a field is empty, we don't check it for validity,
-			  * we only check non-empty fields for validity, we check empty
-			  * fields to see if they are required, once that check is done,
-			  * we don't have to check if valid.
-			  */
-		
-			if( $this->debug == 'verbose' ) {
-			print "Validating " . $field_name ."<BR>";
-			print "With Value: " . $this->value($field_name) ."<BR>";
+				return 1;
 			}
-		
-			// get regex
-			if( array_key_exists($this->validate_list[$field_name], $this->rulesList) 
-				&& preg_match('/_[a-zA-Z]+$/', $this->validate_list[$field_name])
-				) {
-					if( $this->debug == 'verbose' ) {
-						print "Using rule";
-					}
-				   $regex = $this->rulesList[$this->validate_list[$field_name]];
-			} else {
-					if( $this->debug == 'verbose' )
-					{
-						print "Using user defined rule";
-					}
-				   $regex = $this->validate_list[$field_name];
-				}
-				if( $regex != '' && (! preg_match( $regex, $this->value($field_name))) )
-				{
-				// error validation
-				$this->fail_validate = 1;
-						
-				// experimental code to set invalid flag for this field
-				$this->fields[$field_name]['invalid'] = 1;
-	$this->fields[$field_name]['error'] = $msgengine->message('field_invalid', $this->fields[$field_name]['label']);
 
-				}
-			}
-	
-		} // end foreach
-	
-		// debug
-		if( $this->debug == 'verbose' ) {
-			//print "Fail Validate: ". $this->fail_validate ."<br>";;
-			//print "Fail Require: ". $this->fail_require ."<BR><br>";;
-		}
-	
-		if( $this->fail_validate
-		|| $this->fail_require ) {
-			return false;
-		} else {
-			return true;
-		}
-}
-
-
-	/**
-	 * Trusted Source
-	 * Returns true if the GET/POST information comes from a trusted source
-	 */
-
-public function trusted() {
-
-	if(getenv('HTTP_REFERRER'))
-    {
-		$ref_url_parts=parse_url(getenv('HTTP_REFERRER'));
-	} else {
-		$ref_url_parts=parse_url(getenv('HTTP_REFERER'));
-	}
-	if($ref_url_parts['host'] !== $this->acceptHost)
-    {
-		return false;
-	} else {
-		return true;
-	}
-}
+	} // end fn
 
 
 	/**
@@ -709,7 +539,7 @@ public function trusted() {
      */	
      
 	public function getFieldLabel( $field_name ) {
-		$this->fields[$field_name]['label'];
+		//$this->fields[$field_name]['label'];
 	}
 
     /**
@@ -718,7 +548,7 @@ public function trusted() {
      */	
 
 	public function setFieldRequiredStatus( $field_name, $status ) {
-		$this->fields[$field_name]['required'] = $status;
+		//$this->fields[$field_name]['required'] = $status;
 	}
 	
     /**
@@ -727,7 +557,7 @@ public function trusted() {
      */	
 
 	public function getFieldRequiredStatus( $field_name ) {
-		$this->fields[$field_name]['required'];
+		//$this->fields[$field_name]['required'];
 	}
 
 	/**
@@ -742,7 +572,7 @@ public function trusted() {
      */
 
 	public function getErrorForField( $field_name ) {
-		return $this->fields[$field_name]['error'];
+		//return $this->fields[$field_name]['error'];
 	}
 
 
